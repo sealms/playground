@@ -1452,3 +1452,91 @@ _mixin(CaptureReference.prototype, {
 		return '';
 	}
 });
+
+
+////////////////////////////////////////////////////////
+// Label
+////////////////////////////////////////////////////////
+
+/**
+ * @class Label
+ * @protected
+ */
+function Label(label) {
+	this._label = label;
+}
+
+/**
+ * @memberof Label
+ * @static
+ * @function
+ * @protected
+ */
+Label.normalize = function (label) {
+	if (typeof label === 'string') {
+		return label;
+	} else if (typeof label === 'number') {
+		return label.toString();
+	} else if (label instanceof Label) {
+		return label._label;
+	}
+	return '__invalid_label__(' + label.toString() + ')';
+};
+
+////////////////////////////////////////////////////////
+// RegexOverwrite
+////////////////////////////////////////////////////////
+
+/**
+ * @class RegexOverwrite
+ * @extends Term
+ * @protected
+ */
+function RegexOverwrite(value) {
+	this._init(value);
+}
+
+RegexOverwrite.prototype = new Term();
+
+_mixin(RegexOverwrite.prototype, {
+	/**
+	 * @memberof RegexOverwrite
+	 * @function
+	 * @protected
+	 */
+	_registerCaptures: function (context) {
+		var i, n, captures;
+
+		captures = this._body.match(regexCodes.captureParentheses);
+		if (captures && captures.length > 0) {
+			for (i = 0, n = captures.length; i < n; ++i) {
+				Capture.register(context, Capture.currentLabel(context));
+			}
+		}
+	},
+	/**
+	 * @memberof RegexOverwrite
+	 * @function
+	 * @protected
+	 */
+	_generateBody: function (context, bodyRequiresWrap) {
+		this._registerCaptures(context);
+		return Term.prototype._generateBody.call(this, context, bodyRequiresWrap);
+	}
+});
+
+////////////////////////////////////////////////////////
+// Modifier
+////////////////////////////////////////////////////////
+
+/**
+ * @class Modifier
+ * @protected
+ */
+function Modifier(modifier) {
+	this._modifier = modifier;
+}
+
+////////////////////////////////////////////////////////
+
+module.exports = regexGen;
